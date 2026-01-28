@@ -177,6 +177,13 @@ export default function App() {
     setBoard(newBoard);
   };
 
+  // リセットボタン（確認ダイアログ付き）
+  const handleReset = () => {
+    if (window.confirm('リセットしますか？現在の進度が失われます。')) {
+      startNewGame();
+    }
+  };
+
   // クリア判定
   const checkCompletion = (currentBoard, solutionBoard) => {
     for (let i = 0; i < GRID_SIZE; i++) {
@@ -185,6 +192,17 @@ export default function App() {
       }
     }
     setIsComplete(true);
+  };
+
+  // 指定された数字がすべて入力されているかチェック
+  const isNumberComplete = (num) => {
+    let count = 0;
+    for (let i = 0; i < GRID_SIZE; i++) {
+      for (let j = 0; j < GRID_SIZE; j++) {
+        if (board[i][j] === num) count++;
+      }
+    }
+    return count === 9;
   };
 
   // キーボードイベントのハンドリング
@@ -236,15 +254,19 @@ export default function App() {
     const isInitial = initialBoard[row][col] !== BLANK;
     const isSelected = selectedCell && selectedCell[0] === row && selectedCell[1] === col;
     const isError = !isInitial && cellValue !== BLANK && cellValue !== solution[row][col];
+    const isCorrect = !isInitial && cellValue !== BLANK && cellValue === solution[row][col];
     
     // ハイライトロジック
     const selectedNum = selectedCell && board[selectedCell[0]][selectedCell[1]];
-    const isSameNum = cellValue !== BLANK && selectedNum === cellValue;
+    const isSameNum = (cellValue !== BLANK && cellValue === selectedNum) || 
+                      (cellValue === BLANK && selectedNum !== BLANK && memos[`${row}-${col}`]?.includes(selectedNum));
 
     if (isSelected) {
       style += "bg-blue-500 text-white ";
     } else if (isError) {
-      style += "bg-red-100 text-red-600 ";
+      style += "bg-white text-red-600 ";
+    } else if (isCorrect) {
+      style += "bg-white text-blue-600 ";
     } else if (isSameNum) {
       style += "bg-blue-200 text-slate-900 ";
     } else if (selectedCell && (selectedCell[0] === row || selectedCell[1] === col || 
@@ -258,7 +280,9 @@ export default function App() {
     // 文字色
     if (!isSelected) {
        if (isInitial) style += "font-bold text-slate-900 ";
-       else style += "text-blue-600 font-medium "; // ユーザー入力
+       else if (isError) style += "text-red-600 font-bold "; // 間違い入力
+       else if (isCorrect) style += "text-blue-600 font-bold "; // 正解入力
+       else style += "text-slate-900 font-medium "; // ユーザー入力（メモ等）
     }
 
     return style;
@@ -355,7 +379,7 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => startNewGame()}
+            onClick={handleReset}
             className="flex-1 flex flex-col items-center justify-center py-3 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-colors"
           >
             <RefreshCw className="w-5 h-5 mb-1" />
@@ -369,7 +393,12 @@ export default function App() {
             <button
               key={num}
               onClick={() => handleNumberInput(num)}
-              className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-2xl font-bold py-3 sm:py-4 rounded-lg shadow-sm transition-all active:scale-95"
+              disabled={isNumberComplete(num)}
+              className={`text-2xl font-bold py-3 sm:py-4 rounded-lg shadow-sm transition-all active:scale-95 ${
+                isNumberComplete(num)
+                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white'
+              }`}
             >
               {num}
             </button>
