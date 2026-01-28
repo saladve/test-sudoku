@@ -100,6 +100,31 @@ export default function App() {
   const [mistakes, setMistakes] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
+  const [shakeCell, setShakeCell] = useState(null); // [row, col]
+
+  // エラー音を再生 (Web Audio API)
+  const playErrorSound = useCallback(() => {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.type = 'sawtooth'; // ブザーっぽい音
+    osc.frequency.setValueAtTime(150, ctx.currentTime); // 低めの音
+    osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.1); 
+
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  }, []);
+
   // 新しいゲームを開始
   const startNewGame = useCallback((diff = difficulty) => {
     const { solution: newSolution, puzzle: newPuzzle } = generatePuzzle(diff);
@@ -150,6 +175,10 @@ export default function App() {
         // 間違い判定（即時フィードバック）
         if (num !== solution[r][c]) {
           setMistakes(prev => prev + 1);
+          // エフェクト & 音
+          playErrorSound();
+          setShakeCell([r, c]);
+          setTimeout(() => setShakeCell(null), 400); // 0.4s後にリセット
         } else {
           // 正解を入力した場合、そのセルのメモを消す
           const key = `${r}-${c}`;
@@ -283,6 +312,11 @@ export default function App() {
        style += "bg-blue-50 ";
     } else {
        style += "bg-white ";
+    }
+
+    // 振動アニメーション
+    if (shakeCell && shakeCell[0] === row && shakeCell[1] === col) {
+      style += "animate-shake ";
     }
 
     return style;
