@@ -261,28 +261,28 @@ export default function App() {
     const isSameNum = (cellValue !== BLANK && cellValue === selectedNum) || 
                       (cellValue === BLANK && selectedNum !== BLANK && memos[`${row}-${col}`]?.includes(selectedNum));
 
-    if (isSelected) {
-      style += "bg-blue-500 text-white ";
-    } else if (isError) {
-      style += "bg-white text-red-600 ";
-    } else if (isCorrect) {
-      style += "bg-white text-blue-600 ";
-    } else if (isSameNum) {
-      style += "bg-blue-200 text-slate-900 ";
-    } else if (selectedCell && (selectedCell[0] === row || selectedCell[1] === col || 
-              (Math.floor(selectedCell[0]/3) === Math.floor(row/3) && Math.floor(selectedCell[1]/3) === Math.floor(col/3)))) {
-       // 関連する行・列・ボックスのハイライト
-       style += "bg-blue-50 ";
-    } else {
-       style += "bg-white ";
-    }
-
     // 文字色
     if (!isSelected) {
        if (isInitial) style += "font-bold text-slate-900 ";
        else if (isError) style += "text-red-600 font-bold "; // 間違い入力
        else if (isCorrect) style += "text-blue-600 font-bold "; // 正解入力
        else style += "text-slate-900 font-medium "; // ユーザー入力（メモ等）
+    }
+
+    if (isSelected) {
+      style += "bg-blue-500 text-white ";
+    } else if (isSameNum) {
+      style += "bg-blue-200 ";
+    } else if (isError) {
+      style += "bg-white ";
+    } else if (isCorrect) {
+      style += "bg-white ";
+    } else if (selectedCell && (selectedCell[0] === row || selectedCell[1] === col || 
+              (Math.floor(selectedCell[0]/3) === Math.floor(row/3) && Math.floor(selectedCell[1]/3) === Math.floor(col/3)))) {
+       // 関連する行・列・ボックスのハイライト
+       style += "bg-blue-50 ";
+    } else {
+       style += "bg-white ";
     }
 
     return style;
